@@ -1,0 +1,48 @@
+<!doctype html><meta charset="utf-8"><title>Audio startup regression</title>
+<h1>Audio startup regression</h1><pre id="results">Rendering…</pre>
+<script>const module = {exports:{}};</script><script src="../src/audio.js"></script>
+<script>
+(async () => {
+  const {SceneAudioEngine} = module.exports;
+  const rate = 48000, duration = .8;
+  const decoder = new OfflineAudioContext(2, rate, rate);
+  const load = async path => {
+    const response = await fetch(path);
+    if (!response.ok) throw new Error(path + ': ' + response.status);
+    return decoder.decodeAudioData(await response.arrayBuffer());
+  };
+  const responses = Object.fromEntries(await Promise.all(
+    ['Siliavuori','Hiidenkirnukivi','Pirunkirkko','dcblock'].map(async name =>
+      [name, await load('../assets/responses/' + name.toLowerCase() + '.wav')])));
+  const drums = Object.fromEntries(await Promise.all([36,48].map(async note =>
+    [note, await load('../assets/drums/' + note + '_127.wav')])));
+  async function render(sceneName, start) {
+    const context = new OfflineAudioContext(2, Math.ceil((start+duration)*rate), rate);
+    const engine = new SceneAudioEngine(context,responses,{});
+    engine.activateScene(sceneName);
+    const initial = {state:context.state, drySend:engine.touchDry.gain.value,
+      sceneLevel:engine.scenes[sceneName].level.gain.value};
+    const hit = new AudioBufferSourceNode(context,{buffer:drums[sceneName==='Hiidenkirnukivi'?48:36]});
+    hit.connect(new GainNode(context,{gain:2})).connect(engine.instrument);
+    hit.start(start);
+    const audio = await context.startRendering();
+    let peak=0, sum=0, count=0;
+    for(let c=0;c<audio.numberOfChannels;c++) {
+      const samples=audio.getChannelData(c);
+      for(let i=Math.round(start*rate);i<samples.length;i++) {
+        peak=Math.max(peak,Math.abs(samples[i]));sum+=samples[i]**2;count++;
+      }
+    }
+    return {peak,rms:Math.sqrt(sum/count),initial};
+  }
+  const results=[];
+  for(const sceneName of ['Siliavuori','Hiidenkirnukivi','Pirunkirkko']) {
+    const first=await render(sceneName,0),settled=await render(sceneName,.5);
+    const peakDifferenceDb=20*Math.log10(first.peak/settled.peak);
+    const rmsDifferenceDb=20*Math.log10(first.rms/settled.rms);
+    results.push({sceneName,first,settled,peakDifferenceDb,rmsDifferenceDb,
+      pass:Math.abs(peakDifferenceDb)<.1&&Math.abs(rmsDifferenceDb)<.1});
+  }
+  document.querySelector('#results').textContent=JSON.stringify({pass:results.every(r=>r.pass),results},null,2);
+})().catch(error=>document.querySelector('#results').textContent=error.stack);
+</script>

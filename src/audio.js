@@ -116,11 +116,15 @@ class SceneAudioEngine {
     return this.audioContext.resume();
   }
 
-  // A ramp from the current value. Unlike an exponential approach, it does not depend on
-  // the node having been processing audio in the meantime.
+  // Set suspended controls immediately: their audio clock cannot advance a ramp before
+  // the first hit. While audio is running, smooth changes from the current value.
   setControl(param, value) {
     const now = this.audioContext.currentTime;
     param.cancelScheduledValues(now);
+    if (this.audioContext.state !== 'running') {
+      param.setValueAtTime(value, now);
+      return;
+    }
     param.setValueAtTime(param.value, now);
     param.linearRampToValueAtTime(value, now + CONTROL_RAMP);
   }
