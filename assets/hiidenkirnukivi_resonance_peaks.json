@@ -1,0 +1,42 @@
+{
+  "source": "assets/hiidenkirnukivi.wav",
+  "extractedAt": "2026-02-21T18:02:26.988Z",
+  "analysis": {
+    "method": "wav-info-icmt-detected_peaks",
+    "maxPeaks": 3,
+    "minHz": 20,
+    "maxHz": 20000,
+    "metadataTimestamp": "2026-02-21T17:23:47+00:00",
+    "detectedPeakCount": 30,
+    "selectedPeakCount": 3
+  },
+  "peaks": [
+    {
+      "order": 1,
+      "rank": 1,
+      "note": "B2",
+      "freqHz": 126.372,
+      "energy": 8.163e-7,
+      "amplitude": 0.006377,
+      "damping": 3.111783
+    },
+    {
+      "order": 2,
+      "rank": 2,
+      "note": "A#4",
+      "freqHz": 474.189,
+      "energy": 7.797e-7,
+      "amplitude": 0.009474,
+      "damping": 7.19508
+    },
+    {
+      "order": 3,
+      "rank": 3,
+      "note": "D4",
+      "freqHz": 299.092,
+      "energy": 7.025e-7,
+      "amplitude": 0.008436,
+      "damping": 6.332132
+    }
+  ]
+}
